@@ -5,8 +5,7 @@
     <title>jextract + libcurl Sync Project</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/white.css" id="theme">
-
-  
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.css">
   <link rel="stylesheet" href="css/header.css">
     <style>
       body, .reveal {
@@ -22,18 +21,7 @@
     <div class="reveal">
       <div class="slides">
         <section data-markdown="slides.md" data-separator="^\-\-\-" data-separator-vertical="^--$" data-separator-notes="^Note:"></section>
-<section>
-  <h3>build.sh (Live from GitHub)</h3>
-  <pre><code id="remote-code" class="language-bash" data-line-numbers="3">Loading...</code></pre>
-  <script>
-    fetch('https://raw.githubusercontent.com/aebyss/jextract-nextsync/main/build.sh')
-      .then(res => res.text())
-      .then(code => {
-        document.getElementById('remote-code').textContent = code;
-        hljs.highlightElement(document.getElementById('remote-code'));
-      });
-  </script>
-</section>
+
 <section>
   <h3>Live Demo: File Sync in Action</h3>
   <iframe
@@ -53,13 +41,12 @@
     <script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/reveal.js/plugin/highlight/highlight.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/reveal.js/plugin/highlight/highlight.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/reveal.js/plugin/highlight/highlight-lines.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js"></script>
+
 
     <script>
       Reveal.initialize({
-        plugins: [ RevealHighlight, RevealMarkdown, RevealNotes ],
+        plugins: [ RevealMarkdown, RevealNotes ],
         markdown: {
           smartypants: true
         },
