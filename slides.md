@@ -152,12 +152,23 @@ Diese Grafik verdeutlicht, dass Clang den Header zuerst analysiert und daraus ei
 
 ---
 
-## Das Ergebniss:  Automatische Java-API
+## Das Ergebnis: Automatische Java-API
 
-- Automatisch erzeugt durch jextract
+- Automatisch erzeugt durch `jextract`
 - Enthält Methoden für jede C-Funktion im Header
 - Nutzt `MemorySegment` für sicheren Zugriff auf nativen Speicher
-- Führt über `MethodHandle` direkt zur .so-Funktion
+- Führt über `MethodHandle` direkt zur `.so`-Funktion
+
+Note:
+Nach dem Aufruf von `jextract` entsteht z. B. die Datei `sync_h.java`.  
+Sie enthält eine Java-Methode für jede Funktion aus meinem Header `sync.h`.  
+Die Parameter sind `MemorySegment`s – das ist eine sichere Art, mit nativen Pointern in Java zu arbeiten.  
+Das Ganze wird zur direkten Java-API auf meine native Bibliothek.
+
+---
+
+## Beispiel: Generierte Methode
+
 
 ```java
 //Sync.java
@@ -173,14 +184,11 @@ public static int upload_file(MemorySegment local_path, MemorySegment nextcloud_
     }
 }
 ```
+
 Note:
-Nach dem Aufruf von jextract entsteht unter anderem diese Datei: `sync_h.java`.  
-Sie enthält eine Java-Methode für jede Funktion aus meinem Header `sync.h`.  
-„Hier sehen wir, wie jextract aus der C-Funktion upload_file(...) eine nutzbare Java-Methode erzeugt hat.
-Die Parameter sind MemorySegments – das ist eine sichere und kontrollierte Art, mit nativen Pointern in Java zu arbeiten.
+Hier sehen wir, wie jextract aus der C-Funktion upload_file(...) eine nutzbare Java-Methode erzeugt hat.
 Im Hintergrund steckt ein MethodHandle, der direkt auf libsync.so zeigt.
-Wenn ich diese Methode in Java aufrufe, wird ohne JNI der C-Code ausgeführt – synchron und effizient.
-Die Zeile mit invokeExact(...) ist also der Moment, in dem Java die Kontrolle an C übergibt.
+Der Aufruf von invokeExact(...) übergibt also die Kontrolle an den nativen C-Code.
 
 ---
 
