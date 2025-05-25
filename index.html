@@ -1,40 +1,70 @@
 <!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>jextract + libcurl Sync Project</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/white.css" id="theme">
 
-		<title>reveal.js</title>
+  
+  <link rel="stylesheet" href="/css/header.css">
+    <style>
+      body, .reveal {
+        font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Fixed Header -->
+  <div class="slide-header">
+    <img src="Ostfalia.svg.png" alt="Ostfalia Logo" class="logo">
+  </div>
+    <div class="reveal">
+      <div class="slides">
+        <section data-markdown="slides.md" data-separator="^\-\-\-" data-separator-vertical="^--$" data-separator-notes="^Note:"></section>
+<section>
+  <h3>build.sh (Live from GitHub)</h3>
+  <pre><code id="remote-code" class="language-bash" data-line-numbers="3">Loading...</code></pre>
+  <script>
+    fetch('https://raw.githubusercontent.com/aebyss/jextract-nextsync/main/build.sh')
+      .then(res => res.text())
+      .then(code => {
+        document.getElementById('remote-code').textContent = code;
+        hljs.highlightElement(document.getElementById('remote-code'));
+      });
+  </script>
+</section>
+<section>
+  <h3>Live Demo: File Sync in Action</h3>
+  <iframe
+    width="800"
+    height="450"
+    src="https://www.youtube.com/embed/watch?v=EXZXt3OsRhQ"
+    title="NextSync Demo"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen>
+  </iframe>
+</section>
 
-		<link rel="stylesheet" href="dist/reset.css">
-		<link rel="stylesheet" href="dist/reveal.css">
-		<link rel="stylesheet" href="dist/theme/black.css">
 
-		<!-- Theme used for syntax highlighted code -->
-		<link rel="stylesheet" href="plugin/highlight/monokai.css">
-	</head>
-	<body>
-		<div class="reveal">
-			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
-			</div>
-		</div>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js/plugin/highlight/highlight.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js/plugin/highlight/highlight.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js/plugin/highlight/highlight-lines.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js"></script>
 
-		<script src="dist/reveal.js"></script>
-		<script src="plugin/notes/notes.js"></script>
-		<script src="plugin/markdown/markdown.js"></script>
-		<script src="plugin/highlight/highlight.js"></script>
-		<script>
-			// More info about initialization & config:
-			// - https://revealjs.com/initialization/
-			// - https://revealjs.com/config/
-			Reveal.initialize({
-				hash: true,
-
-				// Learn about plugins: https://revealjs.com/plugins/
-				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
-			});
-		</script>
-	</body>
+    <script>
+      Reveal.initialize({
+        plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ],
+        markdown: {
+          smartypants: true
+        },
+        slideNumber: true,
+      });
+    </script>
+  </body>
 </html>

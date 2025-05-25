@@ -1,0 +1,34 @@
+/* style.css */
+.slide-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  background: white;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0px;
+  z-index: 1000;
+  font-family: 'Palatino Linotype', Palatino, serif;
+  font-size: 16px;
+}
+
+
+.slide-header .logo {
+  height: 30px;
+  margin-right: 10px;
+}
+
+.slide-number {
+  right: auto !important;
+  left: 20px !important;
+  bottom: 12px !important;
+  text-align: left;
+}
+.reveal code .highlight-line {
+  background-color: #ffeeba;
+}
+
