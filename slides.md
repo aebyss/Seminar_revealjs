@@ -5,11 +5,41 @@ A Native Java Integration Projekt
 Ostfalia University of Applied Sciences  
 *Seminar Presentation – Sommersemester 2025*
 
+Note:
+Hallo zusammen,  
+ich freue mich, heute mein Projekt vorzustellen, bei dem ich mithilfe von **jextract** eine Brücke zwischen **Java** und **C** gebaut habe.
+
+Im Zentrum steht eine kleine native Bibliothek, mit der ich Dateien direkt per **WebDAV auf meine Nextcloud** hochladen kann –  
+
+Dabei ging es nicht nur um Technik, sondern auch darum, ein System zu schaffen, das **leichtgewichtig**, **schnell** und **gut wartbar** ist.
+
+Ich zeige heute Schritt für Schritt, wie jextract funktioniert, wo seine Stärken liegen –  
+und auch, an welchen Stellen es (noch) an Grenzen stößt.
+
+
+---
+
+## Inhaltsverzeichnis
+
+1. Motivation & Ziel
+2. Architektur & Komponenten
+3. Die Rolle von jextract
+4. Native Bindings & Code-Generierung
+5. Einschränkungen & Fallstricke
+6. Fazit & Ausblick
+
+Note:
+In dieser Präsentation führe ich euch durch mein Projekt zur nativen Interaktion zwischen Java und C mit jextract.  
+Wir beginnen mit der Motivation, schauen uns die Architektur an, steigen dann in jextract ein,  
+und besprechen die praktischen Erfahrungen – inklusive Herausforderungen.  
+Zum Schluss gibt’s ein Fazit und einen kurzen Ausblick, wohin es noch gehen kann.
+
+
 ---
 
 ## Motivation & Problemstellung
 
-- Java hat keine moderne WebDAV-Client-Bibliothek mit voller Methodenableistung (z. B. `PROPFIND`)
+- Java hat veraltete WebDAV-Client-Bibliotheken die z.B. (z. B. `PROPFIND`)
 - libcurl ist extrem performant und unterstützt WebDAV vollständig – aber in C
 - JNI ist komplex und fehleranfällig – besonders bei Authentifizierung, Streams und Pointern
 
@@ -58,8 +88,13 @@ Dazu gehören Funktionen, Structs, Enums usw.
 
 ```c {highlightLines="2"}
   // sync.h
+  #ifndef SYNC_H
+  #define SYNC_H
+
   void upload_file(const char* path, const char* target_url);
   void list_folders(const char* url);
+
+  #endif
 ```
 Note:
 Hier sehen wir den Header sync.h, den ich für meine Anwendung geschrieben habe.
@@ -69,12 +104,7 @@ Genau das braucht jextract, um eine Java-API daraus zu generieren.
 
 ---
 
-## jextract - von Header zu Java (CLI)
-
-
----
-
-## Titel: „Generierung der Java-Bindings“
+## Generierung der Java-Bindings
 
 ```bash
 # Kompilieren der C-Bibliothek (libsync.so)
@@ -91,31 +121,50 @@ jextract \
 ```
 
 Note:
-In dieser Folie zeige ich den vollständigen Build-Prozess – also wie ich meine C-Funktionen in eine Java-API überführe.
+Diese Folie zeigt den vollständigen Build-Prozess: Wie aus C-Code eine nutzbare Java-API entsteht.
 
-Zuerst die obere Zeile:
-Hier verwende ich clang, um meine native Bibliothek libsync.so zu erzeugen. Das -shared-Flag erstellt eine Shared Library, und -fPIC sorgt dafür, dass der Code positionsunabhängig ist – was für dynamische Bibliotheken notwendig ist.
-Mit -lcurl und -lxml2 linke ich gegen libcurl und libxml2, weil mein C-Code HTTP-Uploads und XML-Verarbeitung nutzt – zum Beispiel bei PROPFIND.
+Zuerst wird mit clang die native Bibliothek libsync.so erzeugt.
+Das -shared-Flag erzeugt eine dynamische Bibliothek (Shared Library), -fPIC macht sie positionsunabhängig.
+Zusätzlich wird gegen libcurl und libxml2 gelinkt, weil mein Code HTTP- und XML-Funktionen nutzt – etwa für PROPFIND.
 
-Wichtig: Diese .so ist später das eigentliche Ziel der Java-Aufrufe. Ohne sie würden die generierten Methoden ins Leere laufen.
+Der zweite Block zeigt den jextract-Aufruf.
+Dieser analysiert die Header-Datei sync.h und erzeugt automatisch Java-Bindings.
+Wichtig sind dabei folgende Optionen:
 
-Der zweite Block zeigt den Aufruf von jextract.
-Hier wird meine Header-Datei sync.h analysiert und daraus wird automatisch Java-Code erzeugt.
+--library sync: Der Name der nativen Bibliothek (ohne lib und .so), also z. B. libsync.so unter Linux.
+Unter Windows müsste die Datei z. B. sync.dll heißen. Die Plattform entscheidet, wie der Name intern aufgelöst wird.
 
-Einige wichtige Optionen:
+--use-system-load-library: Sorgt dafür, dass später System.loadLibrary("sync") funktioniert – etwa wenn die .so oder .dll im java.library.path liegt.
 
---library sync gibt an, dass die native Bibliothek libsync.so heißt – das braucht jextract, um die Methoden korrekt zu verlinken.
-wie__ fragen an chatgpt gibt es eine mölichkeit nach unterschiedlichen platformen zu sorteiren
-Unter windows soll das naders sein
+-I include/: Gibt den Pfad zur Header-Datei an – notwendig für korrekte Typauflösung durch libclang.
 
--I include/ gibt den Pfad zu den Header-Dateien an – damit Clang alle Typen auflösen kann.
+--output und --target-package: Bestimmen Zielverzeichnis und Java-Paket für die generierte Klasse (z. B. com.nativecloud.sync.sync_h).
 
---use-system-load-library sorgt dafür, dass ich später in Java einfach System.loadLibrary("sync") nutzen kann – ohne Pfadmanipulation.
+Plattformunterschiede beachten:
+Unter Linux muss die Bibliothek libsync.so heißen.
+Unter Windows wäre der Name z. B. sync.dll, und jextract würde automatisch System.loadLibrary("sync") verwenden – ohne Präfix.
 
---output und --target-package bestimmen, wohin der generierte Java-Code geschrieben wird und in welches Java-Paket die Klasse kommt.
+Die erzeugte Java-Klasse enthält Methoden wie upload_file(...), die intern mit MemorySegment und MethodHandle arbeiten – ganz ohne JNI.
 
-Am Ende entsteht eine Java-Klasse – bei mir heißt sie Sync.java – mit Methoden wie upload_file(...), die direkt mit dem nativen C-Code verbunden sind, aber über MemorySegment und ohne JNI funktionieren.
+Wenn man das systemübergreifend einsetzen will (Linux + Windows), sollte man verschiedene Builds für .so und .dll erzeugen – oder den genauen Library-Pfad zur Laufzeit setzen.
 
+Kurz zur positionunabhänigkeit
+Normaler Code hat feste Adressen („absolute Adressierung“).
+→ z. B. mov eax, [0x00401000]
+Das funktioniert nur, wenn der Code genau dort im Speicher liegt.
+Positionunabhängiger Code (PIC, position-independent code) verwendet relative Adressen
+→ z. B. mov eax, [ebx + offset]
+ Dadurch ist der Code flexibler, weil er egal wo im Speicher geladen werden kann.
+
+ Warum ist das wichtig?
+Für Shared Libraries wie libsync.so:
+Mehrere Programme können dieselbe .so verwenden.
+
+Das Betriebssystem lädt sie an beliebige Speicheradressen.
+
+Dafür muss der Code positionunabhängig sein.
+
+Das wird mit dem Compiler-Flag -fPIC aktiviert.
 ---
 ## Die Rolle von Clang
 
@@ -186,10 +235,15 @@ public static int upload_file(MemorySegment local_path, MemorySegment nextcloud_
 ```
 
 Note:
-Hier sehen wir, wie jextract aus der C-Funktion upload_file(...) eine nutzbare Java-Methode erzeugt hat.
-Im Hintergrund steckt ein MethodHandle, der direkt auf libsync.so zeigt.
-Der Aufruf von invokeExact(...) übergibt also die Kontrolle an den nativen C-Code.
+Was wir hier sehen, ist die von jextract erzeugte Java-Methode für die native C-Funktion `upload_file(...)`.
 
+Die zentrale Rolle spielt der sogenannte `MethodHandle`, hier in der Zeile `var mh$ = upload_file.HANDLE`.
+
+Dieser `MethodHandle` ist ein direkter Java-Zeiger auf die C-Funktion – er wurde beim Start der Anwendung erzeugt, mit Hilfe des Foreign Function & Memory APIs.
+
+Wenn ich dann `mh$.invokeExact(...)` aufrufe, wird die native Funktion direkt aufgerufen – inklusive Übergabe der Parameter als `MemorySegment`.2
+
+Optional kann ich mit dem `TRACE_DOWNCALLS`-Flag jeden Funktionsaufruf zur Laufzeit debuggen.
 ---
 
 ## Integration in Quarkus
@@ -218,10 +272,6 @@ Note:
   Hier sieht man ein Beispiel: ein POST-Endpunkt `/upload`, der Multipart-Daten entgegen nimmt, in `MemorySegment`s umwandelt, und dann die native Funktion `upload_file(...)` aufruft.
 
   Quarkus eignet sich besonders gut für solche systemnahen Tools, weil es schnell startet, wenig RAM braucht und sich gut in DevOps-Prozesse integrieren lässt – ideal auch für Raspberry Pi.
-
-  Durch diese Kombination kann ich moderne Java-Tools mit nativen Bibliotheken verbinden – ohne JNI, aber mit REST.
-
-
 
 ---
 
@@ -264,17 +314,77 @@ Der Aufruf ist synchron und sicher – ganz ohne JNI.
 
 ---
 
-## Architektur: Wie alles zusammenspielt
+## Architektur
 
+![Architekturdiagramm](arch.png)
 - Java-Code ruft `sync_h.upload_file(...)`
 - jextract leitet Aufruf an `libsync.so` weiter
 - libsync.so nutzt `libcurl` für HTTP/WebDAV
 - Ziel ist z. B. eine Nextcloud-Instanz
 
 Note:
-Diese Architektur ist leichtgewichtig, systemnah und portierbar – und braucht keine separate Java-WebDAV-Library.
+Hier sieht man schön den Ablauf von Java bis zur Nextcloud-Instanz.  
+Jede Komponente erfüllt eine klare Aufgabe: Java ruft die Methode auf, jextract gibt sie an libsync.so weiter,  
+dort wird libcurl genutzt, um HTTP/WebDAV-Requests an Nextcloud zu senden.
 
+---
 
+## Einschränkungen von jextract
+
+- **Funktions-Makros** wie `#define MIN(a,b)`  
+  → werden **ignoriert**, keine Java-Methode
+- **Bitfields** in `structs`  
+  → werden **übersprungen**, keine Feld-Extraktion
+
+Note:
+Auch wenn jextract sehr mächtig ist, stößt man bei der praktischen Arbeit schnell auf ein paar Grenzen.  
+Gerade bei nativen C-Headern, wie man sie oft in älteren Bibliotheken oder Systemkomponenten findet, kommen Features vor, die jextract aktuell nicht verarbeiten kann.
+
+Ich zeige euch zwei typische Beispiele, die mir während der Entwicklung selbst begegnet sind – und wie ich damit umgegangen bin.
+
+---
+### Funktions-Makro
+
+```c
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+```
+##### Alternative
+```c
+int min_int(int a, int b) {
+    return (a < b) ? a : b;
+}
+```
+Note:
+In dieser Folie zeige ich, welche Dinge jextract nicht unterstützt.
+Zuerst das bekannte Makro-Problem: #define MIN(a,b) ist zur Compile-Zeit aktiv, aber verschwindet im Preprocessor. Deshalb erkennt jextract es nicht – wir müssen echte C-Funktionen schreiben, wenn wir sie binden wollen.
+
+Dann Bitfields – sie sind in C nützlich zur Platzersparnis, aber das Memory-Layout ist je nach Compiler und Plattform verschieden. Deshalb kann jextract sie nicht zuverlässig extrahieren. Auch hier hilft eine Umwandlung in normale int-Felder, wenn man sie in Java nutzen will.
+
+Ziel dieser Folie: Bewusstsein schaffen, was nicht geht – und wie man trotzdem zum Ziel kommt.
+---
+
+### Bitfields
+
+```c
+struct Flags {
+    unsigned int read  : 1;
+    unsigned int write : 1;
+    unsigned int exec  : 1;
+};
+```
+*Ausgabe: Skipping Flags.read (bitfields are not supported)*
+
+##### Alternative
+```c
+struct Flags {
+    unsigned int read;
+    unsigned int write;
+    unsigned int exec;
+};
+```
+
+Note:
+Bitfields sparen Speicher, sind aber plattformabhängig im Layout. jextract überspringt sie, weil das Layout nicht garantiert nachgebildet werden kann. Nutze lieber einfache int-Felder, wenn du plattformunabhängig arbeiten willst.
 ---
 
 ## Demo / Code Snippets
@@ -288,7 +398,7 @@ void upload_file(const char* local_path, const char* url);
 - jextract ist nutzbar aber low-level C soll sauber und gut definiert sein
 - Debugging vom native code ist immer noch sehr tricky
 - Performance besser als Sardine in diesem Beispiel
-- Echtzeitsync mit Raspberry-Pi funktioniert sehr gut mit kleinen Dateien
+- "Echtzeitsync" mit Raspberry-Pi funktioniert sehr gut mit kleinen Dateien
 
 ---
 
@@ -296,18 +406,36 @@ void upload_file(const char* local_path, const char* url);
 
 - C code muss sehr strikt nach angaben von jextract definiert werden
 - WebDAV quirks (e.g., PROPFIND) benötigt low-level handling
-- Containerization von libsync.so und mounting in k3s war nicht trivial
+- Containerisierug von libsync.so war nicht trivial
+
+Note:
+In diesem Projekt war es entscheidend, den C-Code so zu schreiben, dass jextract ihn überhaupt verarbeiten kann.  
+Das heißt: keine Makros mit Logik, keine Bitfields, keine undurchsichtigen Structs.
+
+Ein zweiter Punkt war der Umgang mit WebDAV – speziell der PROPFIND-Request ist sehr speziell und wird von den meisten High-Level-Clients nicht richtig unterstützt. Deshalb musste ich direkt mit libcurl arbeiten und z. B. die XML-Antwort manuell verarbeiten.
+
+Daher habe ich entschieden, die Bibliothek **zuerst lokal zu testen** – und die Containerisierung erst dann zu machen, wenn das was wichtig ist erstmal gut läuft.
+
 
 ---
 
 ## Fazit & Ausblick
 
-- jextract ermöglicht produktive native Interop mit C
+- jextract ermöglicht effiziente und sichere Interop mit nativen C-Libraries
+- Ideal für Systemintegration mit Performance-Anforderungen
+- Projekt hat Spaß gemacht und praxisnah viele Herausforderungen gezeigt
+- Nächstes Ziel: Dateisynchronisation zwischen Geräten mit ZeroMQ + Nextcloud
 
-- Sehr hilfreich für Systemintegration, hohe Performance
+Note:
+Dieses Projekt war für mich nicht nur technisch spannend, sondern hat auch richtig Spaß gemacht.  
+Ich habe tief in die Welt von jextract und dem Foreign Function & Memory API eingetaucht und dabei gesehen, wie sauber und performant native Interop heute sein kann – ganz ohne JNI.
 
-- Nächstes Ziel: ZeroMQ für asynchrone Kommunikation zwischen Diensten (optional)
+Besonders motiviert hat mich ein persönlicher Moment: Ich wollte automatische Datei-Uploads von meinem Handy zu Nextcloud einrichten – aber Google blockiert diese Funktion aktiv.  
+Das war der Moment, wo ich dachte: „Okay – ich baue es eben selbst.“
 
+Daraus entstand mein eigener nativer Dateisynchronisationsdienst mit libcurl, jextract und Quarkus – der nächste Schritt wird die asynchrone Kommunikation mit ZeroMQ sein, um mehrere Geräte zu vernetzen.
+
+Also: viel gelernt, viel gelacht, ein Problem gelöst – und das nächste wartet schon.
 ---
 
 ## Fragen
