@@ -1,4 +1,4 @@
-# File Synchronization mit jextract & libcurl
+## File Synchronization mit jextract & libcurl
 
 A Native Java Integration Projekt
 Ostfalia University of Applied Sciences  
@@ -427,7 +427,6 @@ Ich zeige euch zwei typische Beispiele, die mir während der Entwicklung selbst 
 ```c
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 ```
-Dieser Funktionsmakro kann nicht in header Datei geparst werden aber ganz einfacher ma
 ##### Alternative
 ```c
 int min_int(int a, int b) {
