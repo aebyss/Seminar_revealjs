@@ -2,7 +2,7 @@
 
 A Native Java Integration Projekt
 Ostfalia University of Applied Sciences  
-*Seminar Presentation – Sommersemester 2025*
+*Seminarvortrag – Sommersemester 2025*
 ##### Prof. Dr. Bernd Müller
 ###### Edin Fidoris
 
