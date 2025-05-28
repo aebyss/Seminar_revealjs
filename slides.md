@@ -485,14 +485,7 @@ Bitfields sparen Speicher, sind aber plattformabhängig im Layout. jextract übe
 
 ---
 
-## Demo
-
-<iframe width="800" height="450"
-  src="https://www.youtube.com/watch?v=1ugKw5oYIYM"
-  frameborder="0"
-  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-  allowfullscreen>
-</iframe>
+[Demo](https://www.youtube.com/watch?v=1ugKw5oYIYM)
 
 ---
 
