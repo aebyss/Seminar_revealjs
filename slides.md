@@ -71,19 +71,11 @@ Das Ergebnis: Ich konnte aus Java direkt mit libcurl kommunizieren und so mein Z
 - Ergebnis: Ein Service der die Dateien synchronisiert mit einer lokalen Nextcloudinstanz die auf dem Raspberry Pi in k3s läuft
 
 Note:
-Mein Ziel war es, einen eigenen Dateisynchronisationsdienst zu bauen –  
-zwischen meinem Android-Gerät und einer selbstgehosteten Nextcloud-Instanz auf einem Raspberry Pi.
-
-Schnell war klar: Ich brauche WebDAV – und die robusteste Lösung ist `libcurl`.
-
-Aber `libcurl` ist in C – und die klassische JNI-Anbindung ist kompliziert, fehleranfällig und aufwendig zu pflegen.  
-Gerade wenn man Funktionen hinzufügen oder Änderungen machen will, ist JNI keine gute Lösung.
-
-Dann habe ich jextract entdeckt.
 
 Meine Hoffnung: Ich schreibe eine einfache C-Header-Datei, in der ich meine Funktionen wie `upload_file(...)` deklariere –  
 und jextract erstellt mir daraus automatisch eine saubere Java-API.
 
+Spoiler Alert:
 Das hat funktioniert. Ich musste kein JNI schreiben, keine nativen Wrapper pflegen –  
 sondern konnte direkt aus Java über `MemorySegment` mit meiner nativen C-Bibliothek kommunizieren.
 
@@ -213,7 +205,6 @@ Es ist also ein technischer Schlüsselbestandteil im Hintergrund, auch wenn ich 
 
 ---
 
-
 ## Das Ergebnis: Automatische Java-API
 
 - Automatisch erzeugt durch jextract aus dem Header sync.h
@@ -308,7 +299,6 @@ Es startet extrem schnell, hat einen sehr niedrigen RAM-Verbrauch und bietet dir
 
 In meinem Fall: Ich wollte eine REST-Schnittstelle bereitstellen, die eine Datei empfängt und sie über `libcurl` hochlädt – und das möglichst schlank.  
 Quarkus war dafür perfekt geeignet.
-
 
 ---
 
@@ -405,7 +395,6 @@ Diese Architektur zeigt, dass Java heute **direkt mit nativen C-Bibliotheken kom
 
 „Da Nextcloud auf meinem Raspberry Pi lokal läuft, aber ich externen Zugriff für den Sync-Service brauche, nutze ich cloudflared als sicheren Tunnel. So kann ich z. B. über https://nextcloud.edinf.dev per libcurl hochladen – ohne VPN oder Portweiterleitung.“
 
-
 ---
 
 ## Einschränkungen von jextract
@@ -445,18 +434,6 @@ Daher sieht jextract kein `MIN(a,b)` – es gibt für jextract keine Funktionssi
 
 Die Lösung ist: Ich schreibe einfach eine **echte C-Funktion**, wie `int min_int(...)`,  
 dann kann jextract daraus eine Java-Methode generieren – inklusive Typprüfung, `MethodHandle` usw.
-
-Makros wie `#define MIN(a,b)` sind zur Compile-Zeit nur Text-Ersetzungen.  
-Sie werden vom C-Preprocessor ersetzt, **bevor** Clang oder jextract den Code überhaupt sieht.
-
-jextract arbeitet nicht mit diesem „ersetzten“ Code, sondern direkt mit dem Original-Header –  
-also mit der **strukturhaften Repräsentation** des Codes, nicht mit Text.
-
-Daher sieht jextract kein `MIN(a,b)` – es gibt für jextract keine Funktionssignatur, keinen Typ, keine Parameterliste.
-
-Die Lösung ist: Ich schreibe einfach eine **echte C-Funktion**, wie `int min_int(...)`,  
-dann kann jextract daraus eine Java-Methode generieren – inklusive Typprüfung, `MethodHandle` usw.
-
 
 ---
 
